@@ -1,5 +1,7 @@
 TARGET := rv-forth
 
+LDSCRIPT := $(TARGET).ld
+
 RISCV ?= /opt/risc-v
 ARCH  ?= rv32i
 ABI   ?= ilp32
@@ -19,7 +21,7 @@ SPIKE := $(RISCV)/bin/spike
 PK    := $(RISCV)/riscv32-unknown-elf/bin/pk
 
 HFILES := $(wildcard *.h)
-OFILES := $(TARGET).o
+OFILES := $(TARGET).o syscall.o
 
 .PHONY: all run clean distclean size dump
 
