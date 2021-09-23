@@ -17,7 +17,7 @@ AS      := $(CROSS_COMPILE)as
 SIZE    := $(CROSS_COMPILE)size
 OBJDUMP := $(CROSS_COMPILE)objdump
 
-SPIKE := $(RISCV)/bin/spike
+SPIKE := $(RISCV)/bin/xspike
 PK    := $(RISCV)/riscv32-unknown-elf/bin/pk
 
 HFILES := $(wildcard *.h)
