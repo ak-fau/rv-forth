@@ -1,10 +1,12 @@
 
+OUTPUT_FORMAT("elf32-littleriscv")
+OUTPUT_ARCH("riscv")
 ENTRY(_start)
 
 MEMORY
 {
-  rom : ORIGIN = 0x00010000, LENGTH = 0x8000
-  ram : ORIGIN = 0x00018000, LENGTH = 0x8000
+  rom (rx)  : ORIGIN = 0x00010000, LENGTH = 0x8000
+  ram (rwx) : ORIGIN = 0x00018000, LENGTH = 0x8000
 }
 
 SECTIONS
@@ -22,9 +24,11 @@ SECTIONS
     } > rom
 
     .data : {
+        *(.data)
+        . = ALIGN(4);
+        *(.bss)
+        . = ORIGIN(ram) + LENGTH(ram);
     } > ram
 
-    .bss : {
-        *(.bss)
-    } > ram
+    _end_of_ram = .;
 }
