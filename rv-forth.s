@@ -20,3 +20,21 @@ _cold_start:
 1:
         li a0, 0
         tail _exit
+
+        /*
+        * Interpreter registers:
+        *   x2 (sp) -- return stack pointer
+        *   x3 (gp) -- data stack pointer
+        *   x4 (tp) -- threaded code pointer
+        *   x10 (a0) -- copy of data stack top element
+        */
+CALL:   addi sp, sp, -4
+        sw tp, 0(sp)
+        mv tp, ra
+NEXT:   lw ra, 0(tp)
+        addi tp, tp, 4
+        jr ra
+
+EXIT:   lw tp, 0(sp)
+        addi sp, sp, 4
+        j NEXT
