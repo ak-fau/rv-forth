@@ -23,18 +23,23 @@ _cold_start:
 
         /*
         * Interpreter registers:
-        *   x2 (sp) -- return stack pointer
-        *   x3 (gp) -- data stack pointer
-        *   x4 (tp) -- threaded code pointer
+        *   x2  (sp) -- return stack pointer
+        *   x8  (s0) -- data stack pointer
+        *   x9  (s1) -- threaded code pointer
         *   x10 (a0) -- copy of data stack top element
         */
-CALL:   addi sp, sp, -4
-        sw tp, 0(sp)
-        mv tp, ra
-NEXT:   lw ra, 0(tp)
-        addi tp, tp, 4
-        jr ra
+        .option push
+        .option rvc
 
-EXIT:   lw tp, 0(sp)
+CALL:   addi sp, sp, -4
+        sw s1, 0(sp)
+        mv s1, ra
+NEXT:   lw a1, 0(s1)
+        addi s1, s1, 4
+        jr a1
+
+EXIT:   lw s1, 0(sp)
         addi sp, sp, 4
         j NEXT
+
+        .option pop
