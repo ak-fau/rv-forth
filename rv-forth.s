@@ -41,5 +41,9 @@ NEXT:   lw a1, 0(s1)
 EXIT:   lw s1, 0(sp)
         addi sp, sp, 4
         j NEXT
+        /* duplicate NEXT, comment out j NEXT above to measure speed-up */
+NEXT1:  lw a1, 0(s1)
+        addi s1, s1, 4
+        jr a1
 
         .option pop
