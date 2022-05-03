@@ -11,7 +11,7 @@ _start:
         .global _cold_start
 _cold_start:
         la sp, _end_of_ram - 16
-
+/*
 1:      call _getchar
         li t0, 'q'
         beq a0, t0, 1f
@@ -20,8 +20,13 @@ _cold_start:
 1:
         li a0, 0
         tail _exit
+        */
 
-        /*
+        la s0, _forth_data_stack
+        la s1, TEST
+        j NEXT
+
+        /****************************************************************
         * Interpreter registers:
         *   x2  (sp) -- return stack pointer
         *   x8  (s0) -- data stack pointer
@@ -29,7 +34,7 @@ _cold_start:
         *   x10 (a0) -- copy of data stack top element
         */
         .option push
-        .option rvc
+        /* .option rvc /* */
 
 CALL:   addi sp, sp, -4
         sw s1, 0(sp)
@@ -47,3 +52,24 @@ NEXT1:  lw a1, 0(s1)
         jr a1
 
         .option pop
+        /****************************************************************/
+
+        /* (KEY) */
+_KEY:   call _getchar
+        addi s0, s0, -4
+        sw a0, 0(s0)
+        j NEXT
+
+        /* (EMIT) */
+_EMIT:  addi s0, s0, 4
+        call _putchar
+        j NEXT
+
+        /* BRANCH */
+BRANCH: lw s1, 0(s1)
+        j NEXT
+
+TEST:
+        .word _KEY
+        .word _EMIT
+        .word  BRANCH, TEST

@@ -9,6 +9,8 @@ MEMORY
   ram (rwx) : ORIGIN = 0x00018000, LENGTH = 0x8000
 }
 
+FORTH_DATA_STACK_SIZE = 1*1024;
+
 SECTIONS
 {
     .init : {
@@ -27,6 +29,9 @@ SECTIONS
         *(.data)
         . = ALIGN(4);
         *(.bss)
+        . = . + FORTH_DATA_STACK_SIZE;
+        . = ALIGN(4);
+        _forth_data_stack = .;
         . = ORIGIN(ram) + LENGTH(ram);
     } > ram
 
