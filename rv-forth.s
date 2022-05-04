@@ -73,11 +73,55 @@ _EMIT:  addi s0, s0, 4
         call _putchar
         j NEXT
 
+_STOP:
+        mv a0, zero
+        tail _exit
+
         /* BRANCH */
 BRANCH: lw s1, 0(s1)
         j NEXT
 
+QBRANCH: /* ?BRANCH */
+        mv t0, a0
+        lw a0, 4(s0)
+        lw a1, 0(s1)
+        addi s1, s1, 4
+        addi s0, s0, 4
+        beqz t0, NEXT
+        mv s1, a1
+        j NEXT
+
+_EQ:    /* == */
+        lw a1, 4(s0)
+        addi s0, s0, 4
+        beq a0, a1, 1f
+        mv a0, zero
+        sw a0, 0(s0)
+        j NEXT
+1:      li a0, -1
+        sw a0, 0(s0)
+        j NEXT
+
+LIT:    lw a0, 0(s1)
+        addi s0, s0, -4
+        addi s1, s1, 4
+        sw a0, 0(s0)
+        j NEXT
+
+DUP:    sw a0, -4(s0)
+        addi s0, s0, -4
+        j NEXT
+
+        /****************************************************************/
+
+        .align 4
 TEST:
         .word _KEY
+        .word DUP
+        .word LIT, 'q'
+        .word _EQ
+        .word QBRANCH, TEST_END
         .word _EMIT
         .word  BRANCH, TEST
+TEST_END:
+        .word _STOP
