@@ -23,7 +23,7 @@ _cold_start:
         */
 
         la s0, _forth_data_stack
-        la s1, TEST
+        la s1, START
         j NEXT
 
         /****************************************************************
@@ -115,13 +115,20 @@ DUP:    sw a0, -4(s0)
         /****************************************************************/
 
         .align 4
-TEST:
+START:
+        .word TEST
+        .word _STOP
+
+        .align 4
+TEST: /* CFA */
+        call CALL
+TEST_DFA:
         .word _KEY
         .word DUP
         .word LIT, 'q'
         .word _EQ
         .word QBRANCH, TEST_END
         .word _EMIT
-        .word  BRANCH, TEST
+        .word  BRANCH, TEST_DFA
 TEST_END:
-        .word _STOP
+        .word EXIT
