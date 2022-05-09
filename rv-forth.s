@@ -114,14 +114,14 @@ DUP:    sw a0, -4(s0)
 
         /****************************************************************/
 
-        .align 4
+        .align 2
 START:
         .word TEST
         .word _STOP
 
-        .align 4
-TEST: /* CFA */
-        call CALL
+        .align 2
+TEST: /* CFA -- no RVC!! */
+        jal ra, CALL
 TEST_DFA:
         .word _KEY
         .word DUP

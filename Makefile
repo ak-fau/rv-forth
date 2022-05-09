@@ -3,7 +3,7 @@ TARGET := rv-forth
 LDSCRIPT := $(TARGET).ld
 
 RISCV ?= /opt/risc-v
-ARCH  ?= rv32i
+ARCH  ?= rv32ic
 ABI   ?= ilp32
 
 ARCH_FLAGS := -march=$(ARCH) -mabi=$(ABI)
