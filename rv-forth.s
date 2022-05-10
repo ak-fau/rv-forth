@@ -11,16 +11,6 @@ _start:
         .global _cold_start
 _cold_start:
         la sp, _end_of_ram - 16
-/*
-1:      call _getchar
-        li t0, 'q'
-        beq a0, t0, 1f
-        call _putchar
-        j 1b
-1:
-        li a0, 0
-        tail _exit
-        */
 
         la s0, _forth_data_stack
         la s1, START
@@ -34,14 +24,10 @@ _cold_start:
         *   x10 (a0) -- copy of data stack top element
         */
 
-        .option push
-        /* .option norvc /* */
-        /* .option rvc /* */
-
         .macro _next
-        lw a1, 0(s1)
-        addi s1, s1, 4
-        jr a1
+            lw a1, 0(s1)
+            addi s1, s1, 4
+            jr a1
         .endm
 
 CALL:   addi sp, sp, -4
@@ -49,17 +35,16 @@ CALL:   addi sp, sp, -4
         mv s1, ra
 NEXT:   _next
 
-EXIT:   lw s1, 0(sp)
+RETURN: lw s1, 0(sp)
         addi sp, sp, 4
 
         /* duplicate NEXT, comment out j NEXT to measure speed-up */
         .if 0
-        j NEXT
+            j NEXT
         .else
-NEXT1:  _next
+            _next
         .endif
 
-        .option pop
         /****************************************************************/
 
         /* (KEY) */
@@ -122,13 +107,13 @@ START:
         .align 2
 TEST: /* CFA -- no RVC!! */
         jal ra, CALL
-TEST_DFA:
+TEST_PFA:
         .word _KEY
         .word DUP
         .word LIT, 'q'
         .word _EQ
         .word QBRANCH, TEST_END
         .word _EMIT
-        .word  BRANCH, TEST_DFA
+        .word  BRANCH, TEST_PFA
 TEST_END:
-        .word EXIT
+        .word RETURN
