@@ -72,7 +72,7 @@ QBRANCH: /* ?BRANCH */
         lw a1, 0(s1)
         addi s1, s1, 4
         addi s0, s0, 4
-        beqz t0, NEXT
+        bnez t0, NEXT
         mv s1, a1
         j NEXT
 
@@ -112,8 +112,8 @@ TEST_PFA:
         .word DUP
         .word LIT, 'q'
         .word _EQ
-        .word QBRANCH, TEST_END
+        .word QBRANCH, 1f
+        .word RETURN
+1:
         .word _EMIT
         .word  BRANCH, TEST_PFA
-TEST_END:
-        .word RETURN
