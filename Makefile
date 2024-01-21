@@ -2,23 +2,25 @@ TARGET := rv-forth
 
 LDSCRIPT := $(TARGET).ld
 
-RISCV ?= /opt/risc-v
-ARCH  ?= rv32ic
+RISCV ?= /opt/xpack/riscv-none-elf-gcc
+ARCH  ?= rv32iac
 ABI   ?= ilp32
 
-ARCH_FLAGS := -march=$(ARCH) -mabi=$(ABI)
+ARCH_FLAGS := -march=$(ARCH) -mabi=$(ABI) -mno-relax
 CFLAGS  := $(ARCH_FLAGS) -Wall
 ASFLAGS := $(ARCH_FLAGS) --warn --fatal-warnings
 
-CROSS_COMPILE ?= riscv64-unknown-elf-
+CROSS_COMPILE ?= riscv-none-elf-
+
+export PATH := $(RISCV)/bin:$(PATH)
 
 CC      := $(CROSS_COMPILE)gcc
 AS      := $(CROSS_COMPILE)as
 SIZE    := $(CROSS_COMPILE)size
 OBJDUMP := $(CROSS_COMPILE)objdump
 
-SPIKE := $(RISCV)/bin/xspike
-PK    := $(RISCV)/riscv32-unknown-elf/bin/pk
+SPIKE := /usr/bin/xspike
+PK    := /opt/riscv-none-elf/bin/pk
 
 HFILES := $(wildcard *.h)
 OFILES := $(TARGET).o syscall.o
@@ -32,7 +34,7 @@ all: $(TARGET)
 endif
 
 run: $(TARGET) $(if $(S),size)
-	$(SPIKE) $(if $(D),-d) $(PK) $(if $(S),-s) $(TARGET)
+	$(SPIKE) --isa=$(ARCH) $(if $(D),-d) $(PK) $(if $(S),-s) $(TARGET)
 
 size: $(TARGET)
 	$(SIZE) -A $(TARGET)
