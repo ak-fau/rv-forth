@@ -10,8 +10,7 @@ _start:
         .text
         .global _cold_start
 _cold_start:
-        la sp, _end_of_ram - 16
-
+        la sp, _forth_return_stack
         la s0, _forth_data_stack
         la s1, START
         j NEXT
@@ -28,6 +27,10 @@ _cold_start:
             lw a1, 0(s1)
             addi s1, s1, 4
             jr a1
+        .endm
+
+        .macro _call
+            jal ra, CALL
         .endm
 
 CALL:   addi sp, sp, -4
@@ -62,10 +65,51 @@ _STOP:
         mv a0, zero
         tail _exit
 
+        /****************************************************************/
+
+        /* @ */
+_AT:    lw a0, 0(a0)
+        sw a0, 0(s0)
+        j NEXT
+
+        /* ! */
+_STORE: lw a1, 4(s0)
+        addi s0, s0, 8
+        sw a1, 0(a0)
+        lw a0, 0(s0)
+        j NEXT
+
+        /* C@ */
+C_AT:   lbu a0, 0(a0)
+        sw a0, 0(s0)
+        j NEXT
+
+        /* C! */
+C_STORE: lw a1, 4(s0)
+        addi s0, s0, 8
+        sb a1, 0(a0)
+        lw a0, 0(s0)
+        j NEXT
+/***
+H_AT:   lhu a0, 0(a0)
+        sw a0, 0(s0)
+        j NEXT
+
+H_STORE: lw a1, 4(s0)
+        addi s0, s0, 8
+        sh a1, 0(a0)
+        lw a0, 0(s0)
+        j NEXT
+***/
         /* BRANCH */
 BRANCH: lw s1, 0(s1)
         j NEXT
 
+NQBRANCH: /* N?BRANCH */
+        bnez a0, 1f
+        li a0, -1
+        j QBRANCH
+1:      mv a0, zero
 QBRANCH: /* ?BRANCH */
         mv t0, a0
         lw a0, 4(s0)
@@ -93,20 +137,95 @@ LIT:    lw a0, 0(s1)
         sw a0, 0(s0)
         j NEXT
 
+VAR:    mv a0, s1
+        addi s0, s0, -4
+        addi s1, s1, 4
+        sw a0, 0(s0)
+        j NEXT
+
+ONE:    li a0, 1
+        sw a0, -4(s0)
+        addi s0, s0, -4
+        j NEXT
+
+TWO:    li a0, 2
+        sw a0, -4(s0)
+        addi s0, s0, -4
+        j NEXT
+
 DUP:    sw a0, -4(s0)
+        addi s0, s0, -4
+        j NEXT
+
+SWAP:   lw a1, 4(s0)
+        sw a0, 4(s0)
+        sw a1, 0(s0)
+        mv a0, a1
+        j NEXT
+
+OVER:   lw a0, 4(s0)
+        sw a0, -4(s0)
         addi s0, s0, -4
         j NEXT
 
         /****************************************************************/
 
+PLUS:   lw a1, 4(s0)
+        addi s0, s0, 4
+        add a0, a0, a1
+        sw a0, 0(s0)
+        j NEXT
+
+ONE_PLUS:
+        addi a0, a0, 1
+        sw a0, 0(s0)
+        j NEXT
+
+        /****************************************************************/
+
+        .align 2
+
+CR:     _call
+        .word LIT, 0x0d, _EMIT
+        .word LIT, 0x0a, _EMIT
+        .word RETURN
+
+TYPE:   _call
+        .word RETURN
+
+COUNT:  _call
+        .word DUP, _AT
+        .word SWAP, LIT, 4, PLUS, SWAP
+        .word RETURN
+
+BYE:    _call
+        .word LIT
+        .word MSG
+        .word COUNT
+        .word TYPE
+        .word CR
+        .word RETURN
+
+        .section .rodata
+        .align 2
+MSG:
+        .word 7
+        .ascii "Goodbye"
+
+        .align 2
+
+        /****************************************************************/
+
+        .text
         .align 2
 START:
         .word TEST
+        ; .word BYE
         .word _STOP
 
         .align 2
 TEST: /* CFA -- no RVC!! */
-        jal ra, CALL
+        _call
 TEST_PFA:
         .word _KEY
         .word DUP
@@ -117,3 +236,11 @@ TEST_PFA:
 1:
         .word _EMIT
         .word  BRANCH, TEST_PFA
+
+R0:
+        _call
+        .word LIT, _forth_return_stack, RETURN
+
+S0:
+        jal ra, CALL
+        .word LIT, _forth_data_stack, RETURN
