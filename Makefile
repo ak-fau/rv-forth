@@ -19,19 +19,22 @@ AS      := $(CROSS_COMPILE)as
 SIZE    := $(CROSS_COMPILE)size
 OBJDUMP := $(CROSS_COMPILE)objdump
 
-SPIKE := /usr/bin/xspike
+SPIKE  = /usr/bin/${X}spike
 PK    := /opt/riscv-none-elf/bin/pk
 
 HFILES := $(wildcard *.h)
 OFILES := $(TARGET).o syscall.o
 
-.PHONY: all run clean distclean size dump
+.PHONY: all run xrun clean distclean size dump
 
 ifdef S
 all: size
 else
 all: $(TARGET)
 endif
+
+xrun: X = x
+xrun: run
 
 run: $(TARGET) $(if $(S),size)
 	$(SPIKE) --isa=rv32iac $(if $(D),-d) $(PK) $(if $(S),-s) $(TARGET)
