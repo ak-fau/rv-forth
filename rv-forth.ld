@@ -5,7 +5,7 @@ ENTRY(_start)
 
 MEMORY
 {
-  rom (rx)  : ORIGIN = 0x00010000, LENGTH = 0x0800
+  rom (rx)  : ORIGIN = 0x00010000, LENGTH = 0x1000
   ram (rwx) : ORIGIN = 0x00018000, LENGTH = 0x1000
 }
 
