@@ -59,7 +59,7 @@ _KEY:   call _getchar
         /* (EMIT) */
 _EMIT:  addi s0, s0, 4
         call _putchar
-        /* lw a0, 0(s0) */
+        lw a0, 0(s0)
         j NEXT
 
 _STOP:
