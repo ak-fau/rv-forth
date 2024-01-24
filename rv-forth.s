@@ -264,8 +264,26 @@ MINUS:  lw a1, 4(s0)
         sw a0, 0(s0)
         j NEXT
 
+AND:    lw a1, 4(s0)
+        addi s0, s0, 4
+        and a0, a1, a0
+        sw a0, 0(s0)
+        j NEXT
+
 ONE_PLUS:
         addi a0, a0, 1
+        sw a0, 0(s0)
+        j NEXT
+
+TWO_DIV:
+        srai a0, a0, 1
+        sw a0, 0(s0)
+        j NEXT
+
+RSHIFT:
+        lw a1, 4(s0)
+        addi s0, s0, 4
+        srl a0, a1, a0
         sw a0, 0(s0)
         j NEXT
 
@@ -311,6 +329,32 @@ COUNT:  _call
         .word SWAP, LIT, 4, PLUS, SWAP
         .word RETURN
 
+HEX_DIGIT:
+        _call
+        .word LIT, 15, AND
+        .word DUP, LIT, 10, LT
+        .word NQBRANCH, 1f
+        .word LIT, 'A'-10, PLUS
+        .word RETURN
+1:
+        .word LIT, '0', PLUS
+        .word RETURN
+
+HEX_DOT_C:
+        _call
+        .word DUP, LIT, 4, RSHIFT
+        .word HEX_DIGIT, _EMIT
+        .word HEX_DIGIT, _EMIT
+        .word RETURN
+
+HEX_DOT:
+        _call
+        .word DUP, LIT, 24, RSHIFT, HEX_DOT_C
+        .word DUP, LIT, 16, RSHIFT, HEX_DOT_C
+        .word DUP, LIT,  8, RSHIFT, HEX_DOT_C
+        .word HEX_DOT_C
+        .word RETURN
+
 _OK:    _call
         .word LIT
         .word MSG_OK
@@ -336,6 +380,41 @@ START:
         .align 2
 TEST: /* CFA -- no RVC!! */
         _call
+        .word LIT,  0, HEX_DOT_C, CR
+        .word LIT,  1, HEX_DOT_C, CR
+        .word LIT,  2, HEX_DOT_C, CR
+        .word LIT,  3, HEX_DOT_C, CR
+        .word LIT,  4, HEX_DOT_C, CR
+        .word LIT,  5, HEX_DOT_C, CR
+        .word LIT,  6, HEX_DOT_C, CR
+        .word LIT,  7, HEX_DOT_C, CR
+        .word LIT,  8, HEX_DOT_C, CR
+        .word LIT,  9, HEX_DOT_C, CR
+        .word LIT, 10, HEX_DOT_C, CR
+        .word LIT, 11, HEX_DOT_C, CR
+        .word LIT, 12, HEX_DOT_C, CR
+        .word LIT, 13, HEX_DOT_C, CR
+        .word LIT, 14, HEX_DOT_C, CR
+        .word LIT, 15, HEX_DOT_C, CR
+        .word LIT, 0x10, HEX_DOT_C, CR
+        .word LIT, 0x20, HEX_DOT_C, CR
+        .word LIT, 0x30, HEX_DOT_C, CR
+        .word LIT, 0x40, HEX_DOT_C, CR
+        .word LIT, 0x50, HEX_DOT_C, CR
+        .word LIT, 0x60, HEX_DOT_C, CR
+        .word LIT, 0x70, HEX_DOT_C, CR
+        .word LIT, 0x80, HEX_DOT_C, CR
+        .word LIT, 0x90, HEX_DOT_C, CR
+        .word LIT, 0xA0, HEX_DOT_C, CR
+        .word LIT, 0xB0, HEX_DOT_C, CR
+        .word LIT, 0xC0, HEX_DOT_C, CR
+        .word LIT, 0xD0, HEX_DOT_C, CR
+        .word LIT, 0xE0, HEX_DOT_C, CR
+        .word LIT, 0xF0, HEX_DOT_C, CR
+        .word LIT, 0xFF, HEX_DOT_C, CR
+        .word LIT, 0x1234abcd, HEX_DOT, CR
+        /* .word RETURN */
+
         .word _OK
         .word LIT, '*', _EMIT
         .word LIT, 3, SPACES
