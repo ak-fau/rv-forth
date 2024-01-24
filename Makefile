@@ -3,7 +3,7 @@ TARGET := rv-forth
 LDSCRIPT := $(TARGET).ld
 
 RISCV ?= /opt/xpack/riscv-none-elf-gcc
-ARCH  ?= rv32iac
+ARCH  ?= rv32i
 ABI   ?= ilp32
 
 ARCH_FLAGS := -march=$(ARCH) -mabi=$(ABI) -mno-relax
@@ -34,7 +34,7 @@ all: $(TARGET)
 endif
 
 run: $(TARGET) $(if $(S),size)
-	$(SPIKE) --isa=$(ARCH) $(if $(D),-d) $(PK) $(if $(S),-s) $(TARGET)
+	$(SPIKE) --isa=rv32iac $(if $(D),-d) $(PK) $(if $(S),-s) $(TARGET)
 
 size: $(TARGET)
 	$(SIZE) -A $(TARGET)
