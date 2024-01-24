@@ -59,6 +59,7 @@ _KEY:   call _getchar
         /* (EMIT) */
 _EMIT:  addi s0, s0, 4
         call _putchar
+        /* lw a0, 0(s0) */
         j NEXT
 
 _STOP:
@@ -68,12 +69,12 @@ _STOP:
         /****************************************************************/
 
         /* @ */
-_AT:    lw a0, 0(a0)
+AT:     lw a0, 0(a0)
         sw a0, 0(s0)
         j NEXT
 
         /* ! */
-_STORE: lw a1, 4(s0)
+STORE:  lw a1, 4(s0)
         addi s0, s0, 8
         sw a1, 0(a0)
         lw a0, 0(s0)
@@ -90,18 +91,9 @@ C_STORE: lw a1, 4(s0)
         sb a1, 0(a0)
         lw a0, 0(s0)
         j NEXT
-/***
-H_AT:   lhu a0, 0(a0)
-        sw a0, 0(s0)
-        j NEXT
 
-H_STORE: lw a1, 4(s0)
-        addi s0, s0, 8
-        sh a1, 0(a0)
-        lw a0, 0(s0)
-        j NEXT
-***/
-        /* BRANCH */
+        /****************************************************************/
+
 BRANCH: lw s1, 0(s1)
         j NEXT
 
@@ -120,7 +112,34 @@ QBRANCH: /* ?BRANCH */
         mv s1, a1
         j NEXT
 
-_EQ:    /* == */
+_DO:                             /* end-value, start-value --> */
+                                 /* leave-addres -R->          */
+        _call
+        .word FROM_R, DUP, AT, TO_R
+        .word ROT, TO_R
+        .word SWAP, TO_R
+        .word LIT, 4, PLUS, TO_R /* -R->  leave-address', end-value, start/current-value, loop-body-start */
+        .word RETURN             /* -R->  leave-address', end-value, current-value */
+
+_LOOP:
+        _call
+        .word FROM_R, FROM_R, R_AT /* --> return-address, current-value, end-value */
+        .word OVER, LT
+        .word QBRANCH, 1f
+        /* leave */
+        .word DROP, FROM_R, FROM_R, DROP, DROP
+        .word LIT, 4, PLUS
+        .word BRANCH, 2f
+1:
+        /* continue */
+        .word ONE, PLUS, TO_R, AT
+2:
+        .word TO_R
+        .word RETURN
+
+        /****************************************************************/
+
+EQ:     /* == */
         lw a1, 4(s0)
         addi s0, s0, 4
         beq a0, a1, 1f
@@ -130,6 +149,33 @@ _EQ:    /* == */
 1:      li a0, -1
         sw a0, 0(s0)
         j NEXT
+
+
+LT:     /* <  less than:   A, B --> Flag */
+        lw a1, 4(s0)
+        addi s0, s0, 4
+        bltu a1, a0, 1f
+        sw zero, 0(s0)
+        mv a0, zero
+        j NEXT
+1:
+        li a0, -1
+        sw a0, 0(s0)
+        j NEXT
+
+GT:     /* >  more than:   A, B --> Flag */
+        lw a1, 4(s0)
+        addi s0, s0, 4
+        bgtu a1, a0, 1f
+        sw zero, 0(s0)
+        mv a0, zero
+        j NEXT
+1:
+        li a0, -1
+        sw a0, 0(s0)
+        j NEXT
+
+        /****************************************************************/
 
 LIT:    lw a0, 0(s1)
         addi s0, s0, -4
@@ -143,6 +189,11 @@ VAR:    mv a0, s1
         sw a0, 0(s0)
         j NEXT
 
+ZERO:   mv a0, zero
+        sw zero, -4(s0)
+        addi s0, s0, -4
+        j NEXT
+
 ONE:    li a0, 1
         sw a0, -4(s0)
         addi s0, s0, -4
@@ -153,6 +204,12 @@ TWO:    li a0, 2
         addi s0, s0, -4
         j NEXT
 
+DROP:   addi s0, s0, 4
+        lw a0, 0(s0)
+        j NEXT
+
+QDUP:   bnez a0, DUP
+        j NEXT
 DUP:    sw a0, -4(s0)
         addi s0, s0, -4
         j NEXT
@@ -168,11 +225,42 @@ OVER:   lw a0, 4(s0)
         addi s0, s0, -4
         j NEXT
 
+ROT:    lw a1, 4(s0)
+        lw a2, 8(s0)
+        sw a0, 4(s0)
+        sw a1, 8(s0)
+        sw a2, 0(s0)
+        mv a0, a2
+        j NEXT
+
+TO_R:   addi s0, s0, 4
+        sw a0, -4(sp)
+        addi sp, sp, -4
+        lw a0, 0(s0)
+        j NEXT
+
+FROM_R: lw a0, 0(sp)
+        addi sp, sp, 4
+        sw a0, -4(s0)
+        addi s0, s0, -4
+        j NEXT
+
+R_AT:   lw a0, 0(sp)
+        sw a0, -4(s0)
+        addi s0, s0, -4
+        j NEXT
+
         /****************************************************************/
 
 PLUS:   lw a1, 4(s0)
         addi s0, s0, 4
         add a0, a0, a1
+        sw a0, 0(s0)
+        j NEXT
+
+MINUS:  lw a1, 4(s0)
+        addi s0, s0, 4
+        sub a0, a1, a0
         sw a0, 0(s0)
         j NEXT
 
@@ -190,17 +278,42 @@ CR:     _call
         .word LIT, 0x0a, _EMIT
         .word RETURN
 
-TYPE:   _call
+BL:     li a0, ' '
+        sw a0, -4(s0)
+        addi s0, s0, -4
+        j NEXT
+
+SPACE:  _call
+        .word BL, _EMIT, RETURN
+
+SPACES: _call
+        .word QDUP, QBRANCH, 2f
+        .word ZERO, _DO, 2f
+1:
+        .word SPACE
+        .word _LOOP, 1b
+2:
         .word RETURN
 
+TYPE:   _call
+TYPE_PFA:
+        .word QDUP              /* A, N --> A, N, N | A, 0 */
+        .word QBRANCH, 1f
+        .word ONE, MINUS        /* -- A, N-1 */
+        .word SWAP, DUP, C_AT, _EMIT
+        .word ONE, PLUS, SWAP
+        .word BRANCH, TYPE_PFA
+1:
+        .word DROP, RETURN
+
 COUNT:  _call
-        .word DUP, _AT
+        .word DUP, AT
         .word SWAP, LIT, 4, PLUS, SWAP
         .word RETURN
 
-BYE:    _call
+_OK:    _call
         .word LIT
-        .word MSG
+        .word MSG_OK
         .word COUNT
         .word TYPE
         .word CR
@@ -208,11 +321,9 @@ BYE:    _call
 
         .section .rodata
         .align 2
-MSG:
-        .word 7
-        .ascii "Goodbye"
-
-        .align 2
+MSG_OK:
+        .word 2
+        .ascii "ok"
 
         /****************************************************************/
 
@@ -220,27 +331,31 @@ MSG:
         .align 2
 START:
         .word TEST
-        ; .word BYE
         .word _STOP
 
         .align 2
 TEST: /* CFA -- no RVC!! */
         _call
-TEST_PFA:
+        .word _OK
+        .word LIT, '*', _EMIT
+        .word LIT, 3, SPACES
+        .word LIT, '*', _EMIT
+        .word CR
+1:
         .word _KEY
         .word DUP
         .word LIT, 'q'
-        .word _EQ
-        .word QBRANCH, 1f
+        .word EQ
+        .word QBRANCH, 2f
         .word RETURN
-1:
+2:
         .word _EMIT
-        .word  BRANCH, TEST_PFA
+        .word  BRANCH, 1b
 
 R0:
         _call
         .word LIT, _forth_return_stack, RETURN
 
 S0:
-        jal ra, CALL
+        _call
         .word LIT, _forth_data_stack, RETURN
