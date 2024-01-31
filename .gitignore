@@ -3,3 +3,4 @@ rv-forth
 *.ttyrec
 *.dump
 *~
+*.bin

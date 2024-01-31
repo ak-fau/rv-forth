@@ -18,6 +18,7 @@ CC      := $(CROSS_COMPILE)gcc
 AS      := $(CROSS_COMPILE)as
 SIZE    := $(CROSS_COMPILE)size
 OBJDUMP := $(CROSS_COMPILE)objdump
+OBJCOPY := $(CROSS_COMPILE)objcopy
 
 SPIKE  = /usr/bin/${X}spike
 PK    := /opt/riscv-none-elf/bin/pk
@@ -41,6 +42,13 @@ run: $(TARGET) $(if $(S),size)
 
 size: $(TARGET)
 	$(SIZE) -A $(TARGET)
+
+bin: $(TARGET).bin
+
+$(TARGET).bin: $(TARGET)
+	$(OBJCOPY) --output-target=binary \
+                   --only-section=.init --only-section=.text --only-section=.rodata \
+                   $< $@
 
 dump: $(TARGET)
 	$(OBJDUMP) -d $(TARGET) > $(TARGET).dump
