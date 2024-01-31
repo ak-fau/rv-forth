@@ -150,6 +150,18 @@ EQ:     /* == */
         sw a0, 0(s0)
         j NEXT
 
+NOT:
+        _call
+        .word ZERO, EQ
+        .word RETURN
+
+GE:
+        _call
+        .word LT, NOT, RETURN
+
+LE:
+        _call
+        .word GT, NOT, RETURN
 
 LT:     /* <  less than:   A, B --> Flag */
         lw a1, 4(s0)
@@ -213,6 +225,11 @@ QDUP:   bnez a0, DUP
 DUP:    sw a0, -4(s0)
         addi s0, s0, -4
         j NEXT
+
+TWO_DUP:
+        _call
+        .word OVER, OVER
+        .word RETURN
 
 SWAP:   lw a1, 4(s0)
         sw a0, 4(s0)
@@ -313,6 +330,13 @@ SPACES: _call
 2:
         .word RETURN
 
+BS:     /* backspace */
+        _call
+        .word LIT, 0x08 /* ASCII BS */
+        .word BL, OVER
+        .word _EMIT, _EMIT, _EMIT
+        .word RETURN
+
 TYPE:   _call
 TYPE_PFA:
         .word QDUP              /* A, N --> A, N, N | A, 0 */
@@ -355,7 +379,7 @@ HEX_DOT:
         .word HEX_DOT_C
         .word RETURN
 
-_OK:    _call
+OK:    _call
         .word LIT
         .word MSG_OK
         .word COUNT
@@ -369,6 +393,38 @@ MSG_OK:
         .word 2
         .ascii "ok"
 
+        .text
+        .align 2
+
+QPRINT:
+        _call
+        .word DUP, LIT, ' '
+        .word GE, QBRANCH, 1f
+        .word LIT, '~'
+        .word LE, QBRANCH, 2f
+        .word LIT, -1
+        .word RETURN
+1:      .word DROP
+2:      .word ZERO
+        .word RETURN
+
+_EXPECT:
+        _call
+        .word OVER, ZERO, SWAP /* adr max_cnt -- adr max_cnt cnt=0 adr */
+1:
+        .word _KEY
+        .word DUP, QPRINT, QBRANCH, 2f
+        .word DUP, _EMIT
+        .word OVER, C_STORE
+2:
+        .word DROP, DROP, DROP, ONE
+        .word RETURN
+
+        .data
+        .align 2
+        .set TIB_SIZE, 80
+TIB:    .space  TIB_SIZE
+
         /****************************************************************/
 
         .text
@@ -378,58 +434,27 @@ START:
         .word _STOP
 
         .align 2
-TEST: /* CFA -- no RVC!! */
+TEST:
         _call
-        .word LIT,  0, HEX_DOT_C, CR
-        .word LIT,  1, HEX_DOT_C, CR
-        .word LIT,  2, HEX_DOT_C, CR
-        .word LIT,  3, HEX_DOT_C, CR
-        .word LIT,  4, HEX_DOT_C, CR
-        .word LIT,  5, HEX_DOT_C, CR
-        .word LIT,  6, HEX_DOT_C, CR
-        .word LIT,  7, HEX_DOT_C, CR
-        .word LIT,  8, HEX_DOT_C, CR
-        .word LIT,  9, HEX_DOT_C, CR
-        .word LIT, 10, HEX_DOT_C, CR
-        .word LIT, 11, HEX_DOT_C, CR
-        .word LIT, 12, HEX_DOT_C, CR
-        .word LIT, 13, HEX_DOT_C, CR
-        .word LIT, 14, HEX_DOT_C, CR
-        .word LIT, 15, HEX_DOT_C, CR
-        .word LIT, 0x10, HEX_DOT_C, CR
-        .word LIT, 0x20, HEX_DOT_C, CR
-        .word LIT, 0x30, HEX_DOT_C, CR
-        .word LIT, 0x40, HEX_DOT_C, CR
-        .word LIT, 0x50, HEX_DOT_C, CR
-        .word LIT, 0x60, HEX_DOT_C, CR
-        .word LIT, 0x70, HEX_DOT_C, CR
-        .word LIT, 0x80, HEX_DOT_C, CR
-        .word LIT, 0x90, HEX_DOT_C, CR
-        .word LIT, 0xA0, HEX_DOT_C, CR
-        .word LIT, 0xB0, HEX_DOT_C, CR
-        .word LIT, 0xC0, HEX_DOT_C, CR
-        .word LIT, 0xD0, HEX_DOT_C, CR
-        .word LIT, 0xE0, HEX_DOT_C, CR
-        .word LIT, 0xF0, HEX_DOT_C, CR
-        .word LIT, 0xFF, HEX_DOT_C, CR
-        .word LIT, 0x1234abcd, HEX_DOT, CR
-        /* .word RETURN */
-
-        .word _OK
-        .word LIT, '*', _EMIT
-        .word LIT, 3, SPACES
-        .word LIT, '*', _EMIT
-        .word CR
+        .word ZERO
+        .word LIT, 128, ZERO, _DO, 2f
 1:
-        .word _KEY
-        .word DUP
-        .word LIT, 'q'
-        .word EQ
-        .word QBRANCH, 2f
-        .word RETURN
+        .word DUP, HEX_DOT_C, SPACE
+        .word DUP, QPRINT, HEX_DOT, CR
+        .word ONE_PLUS
+        .word _LOOP, 1b
 2:
-        .word _EMIT
-        .word  BRANCH, 1b
+        .word DROP
+        /* .word CR, LIT, '>', _EMIT, SPACE
+
+        .word LIT, TIB, LIT, TIB_SIZE
+        .word _EXPECT, CR
+
+        .word TWO_DUP, SWAP, HEX_DOT, SPACE, HEX_DOT
+        .word SPACE, SPACE, OK
+        .word TYPE, CR
+        .word _KEY, DROP */
+        .word RETURN
 
 R0:
         _call
