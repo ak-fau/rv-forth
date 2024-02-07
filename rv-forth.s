@@ -33,6 +33,20 @@ _cold_start:
             jal ra, CALL
         .endm
 
+        .macro save_t012
+            sw t0, -4(s0)
+            sw t1, -8(s0)
+            sw t2, -12(s0)
+            addi s0, s0, -12
+        .endm
+
+        .macro restore_t012
+            lw t2, 0(s0)
+            lw t1, 4(s0)
+            lw t0, 8(s0)
+            addi s0, s0, 12
+        .endm
+
 CALL:   addi sp, sp, -4
         sw s1, 0(sp)
         mv s1, ra
@@ -408,17 +422,53 @@ QPRINT:
 2:      .word ZERO
         .word RETURN
 
-_EXPECT:
-        _call
-        .word OVER, ZERO, SWAP /* adr max_cnt -- adr max_cnt cnt=0 adr */
+_EXPECT: /* buf_addr max_count --> buf_addr count */
+        lw t0, 4(s0)
+        mv t1, zero
+        mv t2, a0
 1:
-        .word _KEY
-        .word DUP, QPRINT, QBRANCH, 2f
-        .word DUP, _EMIT
-        .word OVER, C_STORE
+        save_t012
+        call _getchar
+        restore_t012
+
+        li a1, 0x20
+        blt a0, a1, 3f
+        li a1, 0x7f
+        bge a0, a1, 3f
+
+        sb a0, 0(t0)
+        addi t0, t0, 1
+        addi t1, t1, 1
+        save_t012
+        call _putchar
+        restore_t012
+        bne t1, t2, 1b
 2:
-        .word DROP, DROP, DROP, ONE
-        .word RETURN
+        mv a0, t1
+        sw a0, 0(s0)
+        j NEXT
+
+3:      /* control character */
+        li a1, 0x0A
+        beq a0, a1, 2b
+
+        li a1, 0x7f
+        bne a0, a1, 1b
+
+        /* backspace */
+        beqz t1, 1b
+        addi t1, t1, -1
+        addi t0, t0, -1
+
+        li a0, 0x08
+        call _putchar
+        li a0, ' '
+        call _putchar
+        li a0, 0x08
+        call _putchar
+
+        j 1b
+
 
         .data
         .align 2
@@ -436,24 +486,16 @@ START:
         .align 2
 TEST:
         _call
-        .word ZERO
-        .word LIT, 128, ZERO, _DO, 2f
-1:
-        .word DUP, HEX_DOT_C, SPACE
-        .word DUP, QPRINT, HEX_DOT, CR
-        .word ONE_PLUS
-        .word _LOOP, 1b
-2:
-        .word DROP
-        /* .word CR, LIT, '>', _EMIT, SPACE
+        .word CR, LIT, '>', _EMIT, SPACE
 
-        .word LIT, TIB, LIT, TIB_SIZE
+        .word LIT, TIB, LIT, 4
         .word _EXPECT, CR
 
         .word TWO_DUP, SWAP, HEX_DOT, SPACE, HEX_DOT
         .word SPACE, SPACE, OK
         .word TYPE, CR
-        .word _KEY, DROP */
+
+        .word _KEY, DROP
         .word RETURN
 
 R0:
