@@ -126,6 +126,29 @@ QBRANCH: /* ?BRANCH */
         mv s1, a1
         j NEXT
 
+ASMCALL: /* a0 a1 a2 a3 a4 a5 addr -- a0 a1 */
+        sw ra, -4(sp)
+        addi sp, sp, -4
+        mv ra, a0
+
+        lw a5, 4(s0)
+        lw a4, 8(s0)
+        lw a3, 12(s0)
+        lw a2, 16(s0)
+        lw a1, 20(s0)
+        lw a0, 24(s0)
+
+        jalr ra, ra
+
+        lw ra, 0(sp)
+        addi sp, sp, 4
+        addi s0, s0, 20
+        sw a0, 4(s0)
+        sw a1, 0(s0)
+        mv a0, a1
+
+        j NEXT
+
 _DO:                             /* end-value, start-value --> */
                                  /* leave-addres -R->          */
         _call
