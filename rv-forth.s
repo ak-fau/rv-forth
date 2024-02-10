@@ -445,6 +445,27 @@ QPRINT:
 2:      .word ZERO
         .word RETURN
 
+_strncmp:
+        mv t0, a0
+        mv a0, zero
+        bnez a2, 2f
+1:
+        jr ra
+2:
+        lbu t1, 0(t0)
+        lbu t2, 0(a1)
+        sub a0, t1, t2
+        beqz a0, 3f
+        jr ra
+3:
+        addi a2, a2, -1
+        bnez a2, 4f
+        jr ra
+4:
+        addi t0, t0, 1
+        addi a1, a1, 1
+        j 2b
+
 _EXPECT: /* buf_addr max_count --> buf_addr count */
         lw t0, 4(s0)
         mv t1, zero
