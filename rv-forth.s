@@ -12,12 +12,14 @@ _start:
 _cold_start:
         la sp, _forth_return_stack
         la s0, _forth_data_stack
+        la gp, _forth_string_buffer
         la s1, START
         j NEXT
 
         /****************************************************************
         * Interpreter registers:
         *   x2  (sp) -- return stack pointer
+        *   x3  (gp) -- [long] strings area
         *   x8  (s0) -- data stack pointer
         *   x9  (s1) -- threaded code pointer
         *   x10 (a0) -- copy of data stack top element

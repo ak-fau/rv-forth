@@ -10,6 +10,7 @@ MEMORY
 }
 
 FORTH_DATA_STACK_SIZE = 1*1024;
+FORTH_STRING_BUFFER_SIZE = 2*1024;
 
 SECTIONS
 {
@@ -22,6 +23,7 @@ SECTIONS
     } > rom
 
     .rodata : {
+        . = ALIGN(4);
         *(.rodata)
     } > rom
 
@@ -32,8 +34,11 @@ SECTIONS
         . = . + FORTH_DATA_STACK_SIZE;
         . = ALIGN(4);
         _forth_data_stack = .;
-        . = ORIGIN(ram) + LENGTH(ram) - 16;
+        . = ORIGIN(ram) + LENGTH(ram) - FORTH_STRING_BUFFER_SIZE - 16;
         _forth_return_stack = .;
+        . = . + 16;
+        . = ALIGN(4);
+        _forth_string_buffer = .;
         . = ORIGIN(ram) + LENGTH(ram);
     } > ram
 
