@@ -14,6 +14,7 @@ CROSS_COMPILE ?= riscv-none-elf-
 
 export PATH := $(RISCV)/bin:$(PATH)
 
+LUA     := lua5.1
 CC      := $(CROSS_COMPILE)gcc
 AS      := $(CROSS_COMPILE)as
 SIZE    := $(CROSS_COMPILE)size
@@ -23,8 +24,10 @@ OBJCOPY := $(CROSS_COMPILE)objcopy
 SPIKE  = /usr/bin/${X}spike
 PK    := /opt/riscv-none-elf/bin/pk
 
+LUAFILES := $(wildcard *.lua)
 HFILES := $(wildcard *.h)
 OFILES := $(TARGET).o syscall.o
+OFILES += test-dict.o
 
 .PHONY: all run xrun clean distclean size dump
 
@@ -67,6 +70,9 @@ distclean: clean
 
 .s.o:
 	$(AS) $(ASFLAGS) -o $@ $<
+
+%.s: %.lua $(LUAFILES)
+	$(LUA) $< > $@
 
 $(TARGET): $(OFILES) $(LDSCRIPT) Makefile
 	$(CC) $(CFLAGS) \

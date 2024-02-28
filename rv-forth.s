@@ -576,6 +576,16 @@ START:
         .word _STOP
 
         .align 2
+TEST_FIND:
+        lui a2, %hi(_dict)
+        addi a2, a2, %lo(_dict)
+        lw a1, 4(s0)
+        addi s0, s0, 4
+        call _find
+        sw a0, 0(s0)
+        j NEXT
+
+        .align 2
 TEST:
         _call
         .word CR, LIT, '>', _EMIT, SPACE
@@ -584,8 +594,11 @@ TEST:
         .word _EXPECT, CR
 
         .word TWO_DUP, SWAP, HEX_DOT, SPACE, HEX_DOT
-        .word SPACE, SPACE, OK
-        .word TYPE, CR
+        .word CR
+        .word TWO_DUP, TYPE, CR
+
+        .word TEST_FIND
+        .word HEX_DOT, CR
 
         .word _KEY, DROP
         .word RETURN
