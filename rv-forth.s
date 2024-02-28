@@ -447,6 +447,52 @@ QPRINT:
 2:      .word ZERO
         .word RETURN
 
+        /****************************************************************/
+
+        /* Parameters:
+        /* [gp -- long strings area -- global      */
+        /* a0 -- string len                        */
+        /* a1 -- string pointer                    */
+        /* a2 -- pointer to name list (vocabulary) */
+        /*                                         */
+        /* Returns:                                */
+        /* a0 == 0 -- not found                    */
+        /* a0 -- NFA (pointer to the list entry)   */
+
+_find:
+        andi a0, a0, 0x1f
+        li t0, 3
+        bgt a0, t0, 4f /* len > 3 */
+        /* fall through, len <= 3 */
+        lw a1, 0(a1)
+        li t0, 1
+        slli a0, a0, 3
+        sll t0, t0, a0
+        addi t0, t0, -1
+        slli a0, a0, (24 - 3)
+        and a1, a1, t0
+        or a1, a1, a0 /* len & char(s) */
+        li t0, 0x1fffffff
+1:
+        bnez a2, 2f
+        mv a0, zero
+        ret
+2:
+        lw a0, 0(a2)
+        and a0, a0, t0
+        beq a0, a1, 3f
+        lw a2, 4(a2)
+        j 1b
+3:
+        mv a0, a2
+        ret
+
+4:      /* len > 3 */
+        li a0, 0
+        ret
+
+        /****************************************************************/
+
 _strncmp:
         mv t0, a0
         mv a0, zero
