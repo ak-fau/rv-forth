@@ -57,6 +57,7 @@ clean:
 	$(RM) $(TARGET)
 	$(RM) *.dump
 	$(RM) *.o
+	$(RM) $(TARGET).bin
 
 distclean: clean
 	$(RM) *~
