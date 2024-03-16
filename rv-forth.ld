@@ -39,6 +39,7 @@ SECTIONS
         . = . + 16;
         . = ALIGN(4);
         _forth_string_buffer = .;
+        *(.strings)
         . = ORIGIN(ram) + LENGTH(ram);
     } > ram
 
