@@ -488,8 +488,36 @@ _find:
         ret
 
 4:      /* len > 3 */
-        li a0, 0
+        mv t0, a2         /* name list pointer */
+        mv t1, a1         /* name pointer */
+        andi t2, a0, 0x1f /* name length */
+5:
+        mv a0, zero
+        bnez t0, 6f
         ret
+6:
+        lw a2, 0(t0)
+        srli a0, a2, 24
+        andi a0, a0, 0x1f
+        beq a0, t2, 7f
+        /* length doesn't match -- move to the next element */
+        lw t0, 4(t0)
+        j 5b
+7:
+        li a0, 0x00ffffff
+        and a0, a0, a2
+        add a0, a0, gp
+        mv a1, t1
+        mv a2, t2
+        save_t012
+        call _strncmp
+        restore_t012
+        bnez a0, 8f
+        /* name match */
+        mv a0, t0
+        ret
+8:      lw t0, 4(t0)
+        j 5b
 
         /****************************************************************/
 
@@ -590,7 +618,7 @@ TEST:
         _call
         .word CR, LIT, '>', _EMIT, SPACE
 
-        .word LIT, TIB, LIT, 4
+        .word LIT, TIB, LIT, 20
         .word _EXPECT, CR
 
         .word TWO_DUP, SWAP, HEX_DOT, SPACE, HEX_DOT
