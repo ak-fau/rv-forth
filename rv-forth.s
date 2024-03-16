@@ -36,9 +36,9 @@ _cold_start:
         .endm
 
         .macro save_t012
-            sw t0, -4(s0)
-            sw t1, -8(s0)
             sw t2, -12(s0)
+            sw t1, -8(s0)
+            sw t0, -4(s0)
             addi s0, s0, -12
         .endm
 
@@ -450,7 +450,7 @@ QPRINT:
         /****************************************************************/
 
         /* Parameters:
-        /* [gp -- long strings area -- global      */
+        /* gp -- long strings area -- global       */
         /* a0 -- string len                        */
         /* a1 -- string pointer                    */
         /* a2 -- pointer to name list (vocabulary) */
