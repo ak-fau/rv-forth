@@ -4,3 +4,4 @@ rv-forth
 *.dump
 *~
 *.bin
+test-dict.s
