@@ -503,11 +503,11 @@ _find:
         lw a2, 0(t0)
         srli a0, a2, 24
         andi a0, a0, 0x1f
-        beq a0, t2, 7f
+        beq a0, t2, 8f
         /* length doesn't match -- move to the next element */
-        lw t0, 4(t0)
+7:      lw t0, 4(t0)
         j 5b
-7:
+8:
         li a0, 0x00ffffff
         and a0, a0, a2
         add a0, a0, gp
@@ -516,12 +516,12 @@ _find:
         save_t012
         call _strncmp
         restore_t012
-        bnez a0, 8f
+        bnez a0, 7b
         /* name match */
         mv a0, t0
+        lw ra, 0(s0)
+        addi s0, s0, 4
         ret
-8:      lw t0, 4(t0)
-        j 5b
 
         /****************************************************************/
 
