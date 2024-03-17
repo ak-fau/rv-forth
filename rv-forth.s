@@ -488,12 +488,16 @@ _find:
         ret
 
 4:      /* len > 3 */
+        sw ra, -4(s0)
+        addi s0, s0, -4
         mv t0, a2         /* name list pointer */
         mv t1, a1         /* name pointer */
         andi t2, a0, 0x1f /* name length */
 5:
         mv a0, zero
         bnez t0, 6f
+        lw ra, 0(s0)
+        addi s0, s0, 4
         ret
 6:
         lw a2, 0(t0)
